@@ -1,2 +1,2 @@
-package com.example.gowallet.data.repository
+package com.example.gowallet.data.repository // Moved to UI folder
 
