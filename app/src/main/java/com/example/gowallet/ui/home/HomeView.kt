@@ -23,9 +23,14 @@ fun HomeView() {
     val weekDays = listOf("M", "T", "W", "T", "F", "S", "S")
 
     val recentTransactions = listOf(
-        Transaction("1", "M-PESA", 1500.0, "05 Apr", "09:00", "SCD12345"),
-        Transaction("2", "TILL 98765", 450.0, "05 Apr", "12:45", "SCD67890"),
-        Transaction("3", "PAYBILL 400222", 2100.0, "04 Apr", "18:20", "SCD11223")
+        Transaction("1", "Mary Wangechi", 1500.0, "05 Apr", "09:00", "SCD12345"),
+        Transaction("2", "Isaac Kipruto", 450.0, "05 Apr", "12:45", "SCD67890"),
+        Transaction("3", "Oscar Mutuku", 2100.0, "04 Apr", "13:20", "SCD11223"),
+        Transaction("4", "James Njoroge", 2100.0, "04 Apr", "14:00", "SCD11224"),
+        Transaction("5", "Wendy Kadzo", 2100.0, "04 Apr", "15:20", "SCD11225"),
+        Transaction("6", "William Samoei", 2100.0, "04 Apr", "16:20", "SCD11226")
+
+
     )
 
     Scaffold(
@@ -73,12 +78,30 @@ fun HomeView() {
 
             // Section 3: Latest Transactions Header
             item {
-                Text(
-                    text = "Latest Transactions",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Latest Transactions",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+
+                    Text(
+                        text = "View all",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Light,
+                        modifier = Modifier.padding(top = 8.dp)
+
+                    )
+                }
+
             }
 
             // Section 4: The Paginated List

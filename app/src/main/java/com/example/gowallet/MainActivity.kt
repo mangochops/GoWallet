@@ -5,22 +5,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+
+// 1. THIS IS THE CRITICAL IMPORT
+import com.example.gowallet.ui.home.HomeView
 import com.example.gowallet.ui.theme.GoWalletTheme
+import com.example.gowallet.ui.transactions.TransactionsView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,58 +34,57 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@PreviewScreenSizes
 @Composable
 fun GoWalletApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            AppDestinations.entries.forEach {
+            AppDestinations.entries.forEach { destination ->
                 item(
                     icon = {
                         Icon(
-                            painterResource(it.icon),
-                            contentDescription = it.label
+                            imageVector = destination.icon,
+                            contentDescription = destination.label
                         )
                     },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
+                    label = { Text(destination.label) },
+                    selected = destination == currentDestination,
+                    onClick = { currentDestination = destination }
                 )
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "Android",
-                modifier = Modifier.padding(innerPadding)
-            )
+        // The Navigation Logic
+        when (currentDestination) {
+            AppDestinations.HOME -> HomeView()
+            AppDestinations.TRANSACTIONS -> TransactionsView()
+            AppDestinations.PROFILE -> PlaceholderScreen("User Profile")
         }
     }
 }
 
 enum class AppDestinations(
     val label: String,
-    val icon: Int,
+    val icon: ImageVector,
 ) {
-    HOME("Home", R.drawable.ic_home),
-    FAVORITES("Favorites", R.drawable.ic_favorite),
-    PROFILE("Profile", R.drawable.ic_account_box),
+    HOME("Home", Icons.Default.Home),
+    TRANSACTIONS("Transactions", Icons.Default.BarChart),
+    PROFILE("Profile", Icons.Default.Person),
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun PlaceholderScreen(title: String) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Text(text = "This is the $title screen")
+    }
 }
 
-@Preview(showBackground = true)
+// 2. THE PREVIEW FOR THE WHOLE APP
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun GreetingPreview() {
+fun GoWalletAppPreview() {
     GoWalletTheme {
-        Greeting("Android")
+        GoWalletApp()
     }
 }
