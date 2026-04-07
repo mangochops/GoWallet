@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
@@ -13,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import android.Manifest
@@ -25,23 +23,32 @@ import com.example.gowallet.ui.home.HomeView
 import com.example.gowallet.ui.theme.GoWalletTheme
 import com.example.gowallet.ui.transactions.TransactionsView
 import com.example.gowallet.ui.onboarding.OnboardingView
+import com.example.gowallet.model.UserViewModel
+import androidx.activity.viewModels
+import com.example.gowallet.ui.profile.EditProfileView
+import com.example.gowallet.ui.profile.ProfileScreen
 
 class MainActivity : ComponentActivity() {
+    private val userViewModel by viewModels<UserViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             GoWalletTheme {
-                GoWalletApp()
+                GoWalletApp(userViewModel)
             }
         }
     }
 }
 
 @Composable
-fun GoWalletApp() {
+fun GoWalletApp(viewModel: UserViewModel) {
     var showOnboarding by rememberSaveable { mutableStateOf(true) }
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+
+    // Sub-navigation state for the Profile tab
+    var isEditingProfile by rememberSaveable { mutableStateOf(false) }
 
     // --- SMS PERMISSION LOGIC ---
     val smsPermissionLauncher = rememberLauncherForActivityResult(
@@ -54,7 +61,9 @@ fun GoWalletApp() {
 
     if (showOnboarding) {
         // 2. Show Onboarding and hide the rest of the app
-        OnboardingView(onFinish = {
+        OnboardingView(
+            viewModel = viewModel,
+            onFinish = {
             // Request permission right as they finish onboarding
             smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
             showOnboarding = false
@@ -72,7 +81,10 @@ fun GoWalletApp() {
                         },
                         label = { Text(destination.label) },
                         selected = destination == currentDestination,
-                        onClick = { currentDestination = destination }
+                        onClick = {
+                            currentDestination = destination
+                            if (destination != AppDestinations.PROFILE) isEditingProfile = false
+                        }
                     )
                 }
             }
@@ -81,7 +93,24 @@ fun GoWalletApp() {
             when (currentDestination) {
                 AppDestinations.HOME -> HomeView()
                 AppDestinations.TRANSACTIONS -> TransactionsView()
-                AppDestinations.PROFILE -> PlaceholderScreen("User Profile")
+                AppDestinations.PROFILE ->  {
+                // Toggle between the Profile list and the Edit form
+                if (isEditingProfile) {
+                    EditProfileView(
+                        viewModel = viewModel,
+                        onBack = { isEditingProfile = false }
+                    )
+                } else {
+                    ProfileScreen(
+                        viewModel = viewModel,
+                        onEditClick = { isEditingProfile = true },
+                        onLogout = {
+                            viewModel.clearData()
+                            showOnboarding = true
+                        }
+                    )
+                }
+            }
             }
         }
     }
@@ -96,18 +125,13 @@ enum class AppDestinations(
     PROFILE("Profile", Icons.Default.Person),
 }
 
-@Composable
-fun PlaceholderScreen(title: String) {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Text(text = "This is the $title screen")
-    }
-}
+
 
 // 2. THE PREVIEW FOR THE WHOLE APP
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GoWalletAppPreview() {
     GoWalletTheme {
-        GoWalletApp()
+        GoWalletApp(UserViewModel())
     }
 }
