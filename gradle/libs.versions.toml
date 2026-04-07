@@ -9,8 +9,10 @@ activityCompose = "1.13.0"
 kotlin = "2.2.10"
 composeBom = "2025.12.00"
 runtime = "1.10.6"
+lottie = "6.4.0"
 
 [libraries]
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

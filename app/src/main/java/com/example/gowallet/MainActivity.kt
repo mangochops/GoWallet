@@ -16,11 +16,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 // 1. THIS IS THE CRITICAL IMPORT
 import com.example.gowallet.ui.home.HomeView
 import com.example.gowallet.ui.theme.GoWalletTheme
 import com.example.gowallet.ui.transactions.TransactionsView
+import com.example.gowallet.ui.onboarding.OnboardingView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,30 +40,49 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun GoWalletApp() {
+    var showOnboarding by rememberSaveable { mutableStateOf(true) }
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach { destination ->
-                item(
-                    icon = {
-                        Icon(
-                            imageVector = destination.icon,
-                            contentDescription = destination.label
-                        )
-                    },
-                    label = { Text(destination.label) },
-                    selected = destination == currentDestination,
-                    onClick = { currentDestination = destination }
-                )
-            }
+    // --- SMS PERMISSION LOGIC ---
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted! The SmsReceiver will now start catching messages.
         }
-    ) {
-        // The Navigation Logic
-        when (currentDestination) {
-            AppDestinations.HOME -> HomeView()
-            AppDestinations.TRANSACTIONS -> TransactionsView()
-            AppDestinations.PROFILE -> PlaceholderScreen("User Profile")
+    }
+
+    if (showOnboarding) {
+        // 2. Show Onboarding and hide the rest of the app
+        OnboardingView(onFinish = {
+            // Request permission right as they finish onboarding
+            smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
+            showOnboarding = false
+        })
+    } else {
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                AppDestinations.entries.forEach { destination ->
+                    item(
+                        icon = {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = destination.label
+                            )
+                        },
+                        label = { Text(destination.label) },
+                        selected = destination == currentDestination,
+                        onClick = { currentDestination = destination }
+                    )
+                }
+            }
+        ) {
+            // The Navigation Logic
+            when (currentDestination) {
+                AppDestinations.HOME -> HomeView()
+                AppDestinations.TRANSACTIONS -> TransactionsView()
+                AppDestinations.PROFILE -> PlaceholderScreen("User Profile")
+            }
         }
     }
 }

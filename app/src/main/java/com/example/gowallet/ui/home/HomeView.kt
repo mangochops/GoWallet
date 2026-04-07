@@ -9,29 +9,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.gowallet.model.Transaction
 import androidx.compose.ui.Alignment
 import com.example.gowallet.ui.components.IncomeBarGraph
 import com.example.gowallet.ui.components.OverviewTabs
 import com.example.gowallet.ui.components.TransactionCard
 import com.example.gowallet.ui.theme.GoWalletTheme
+import com.example.gowallet.model.Transaction
+import com.example.gowallet.model.TransactionType
+import com.example.gowallet.model.MockData
 
 @Composable
 fun HomeView() {
-    // 1. Prepare Sample Data
-    val weeklyData = listOf(2000.0, 4500.0, 1500.0, 7000.0, 3000.0, 5500.0, 4000.0)
-    val weekDays = listOf("M", "T", "W", "T", "F", "S", "S")
 
-    val recentTransactions = listOf(
-        Transaction("1", "Mary Wangechi", 1500.0, "05 Apr", "09:00", "SCD12345"),
-        Transaction("2", "Isaac Kipruto", 450.0, "05 Apr", "12:45", "SCD67890"),
-        Transaction("3", "Oscar Mutuku", 2100.0, "04 Apr", "13:20", "SCD11223"),
-        Transaction("4", "James Njoroge", 2100.0, "04 Apr", "14:00", "SCD11224"),
-        Transaction("5", "Wendy Kadzo", 2100.0, "04 Apr", "15:20", "SCD11225"),
-        Transaction("6", "William Samoei", 2100.0, "04 Apr", "16:20", "SCD11226")
-
-
-    )
+    val recentTransactions = MockData.transactions.take(5)
 
     Scaffold(
         topBar = {
@@ -73,7 +63,7 @@ fun HomeView() {
 
             // Section 2: Bar Graph
             item {
-                IncomeBarGraph(data = weeklyData, days = weekDays)
+                IncomeBarGraph(data = MockData.weeklyIncome, days = MockData.weekDays)
             }
 
             // Section 3: Latest Transactions Header
