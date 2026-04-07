@@ -1,4 +1,4 @@
-package com.example.gowallet.ui.components // Moved to UI folder
+package com.example.gowallet.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -9,9 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-// Replace this with your actual model package if different
 import com.example.gowallet.model.Transaction
-// Replace this with your actual theme package
+import com.example.gowallet.model.TransactionType
 import com.example.gowallet.ui.theme.GoWalletTheme
 
 @Composable
@@ -34,20 +33,20 @@ fun TransactionCard(transaction: Transaction) {
         ) {
             Column {
                 Text(
-                    text = transaction.sender,
+                    text = transaction.person, // Changed from .sender to .person
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = transaction.reference,
+                    text = transaction.id, // Changed from .reference to .id
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Column {
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "KES ${transaction.amount}",
-                    color = Color(0xFF4CAF50), // M-Pesa style green
+                    color = Color(0xFF4CAF50),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -57,22 +56,21 @@ fun TransactionCard(transaction: Transaction) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
         }
     }
 }
 
-@Preview(showBackground = true, name = "Transaction Card Light")
+@Preview(showBackground = true)
 @Composable
 fun TransactionCardPreview() {
     GoWalletTheme {
         val mockTransaction = Transaction(
-            id = "1",
-            sender = "Mary Wangeci",
+            id = "RCV123456",
+            person = "Mary Wangeci",
             amount = 2550.0,
             date = "05 Apr",
             time = "14:30",
-            reference = "RCV123456"
+            type = TransactionType.MPESA
         )
 
         Box(modifier = Modifier.padding(16.dp)) {
@@ -80,4 +78,3 @@ fun TransactionCardPreview() {
         }
     }
 }
-
