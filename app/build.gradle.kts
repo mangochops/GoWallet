@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.gowallet"
+    namespace = "com.example.helatrack"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,12 +12,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gowallet"
+        applicationId = "com.example.helatrack"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
+        multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -31,6 +31,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -45,7 +46,7 @@ android {
 
 
 dependencies {
-
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation(libs.lottie.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
