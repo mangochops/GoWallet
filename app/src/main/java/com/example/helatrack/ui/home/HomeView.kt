@@ -21,7 +21,7 @@ import androidx.compose.runtime.remember
 fun HomeView() {
     val now = java.time.LocalDate.now()
 
-    // 1. Calculate Today's Income
+    // 1. Calculate Today Income
     val todayIncome = remember {
         MockData.transactions.filter {
             val datePart = it.date.split("|")[0].trim() + " ${now.year}"
