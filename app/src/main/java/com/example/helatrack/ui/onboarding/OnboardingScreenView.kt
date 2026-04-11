@@ -29,7 +29,7 @@ import com.example.helatrack.ui.theme.HelaTrackTheme
 
 @Composable
 fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
-    val pagerState = rememberPagerState(pageCount = { 4 })
+    val pagerState = rememberPagerState(pageCount = { 5 })
     val scope = rememberCoroutineScope()
 
     // State to keep track of the full object selected in page 2
@@ -49,18 +49,24 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
                     onNext = { scope.launch { pagerState.animateScrollToPage(1) } }
                 )
                 1 -> AnimationPage(
+                    title = "Your Personal Assistant",
+                    desc = "Close your books every evening. Track cash and mobile payments in one place for a complete financial picture.",
+                    resId = R.raw.assistant,// Or a specific reporting Lottie if available
+                    onNext = { scope.launch { pagerState.animateScrollToPage(2) } }
+                )
+                2 -> AnimationPage(
                     title = "Smart Insights",
                     desc = "See your earning with clean, automated graphs.",
                     resId = R.raw.analytics,
                     onNext = { scope.launch { pagerState.animateScrollToPage(2) } }
                 )
-                2 -> PaymentSelectionPage(
+                3 -> PaymentSelectionPage(
                     onMethodSelected = { method ->
                         selectedMethod = method
                         scope.launch { pagerState.animateScrollToPage(3) }
                     }
                 )
-                3 -> {
+                4 -> {
                     // Pass the whole provider object to the credentials page
                     selectedMethod?.let { provider ->
                         CredentialsPage(
@@ -81,7 +87,7 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(4) { iteration ->
+            repeat(5) { iteration ->
                 val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else Color.LightGray
                 Box(
                     modifier = Modifier
