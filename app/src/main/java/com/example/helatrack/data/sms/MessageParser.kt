@@ -1,50 +1,53 @@
 package com.example.helatrack.data.sms
 
 import android.util.Log
-
-data class TransactionData(
-    val ref: String,
-    val amount: Double,
-    val person: String, // Renamed to match your UI 'person' field
-    val date: String,
-    val type: String
-)
+import com.example.helatrack.data.local.TransactionEntity
 
 object MessageParser {
-    // 1. M-PESA Personal/Business: Matches "RQK7... Confirmed. Ksh450.00 received from WILLICENT MBUGUA"
     private val mpesaReceivedRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\sKsh\s?([\d,]+\.\d{2})\sreceived\sfrom\s(.+?)(?:\s\d+|$)""", RegexOption.IGNORE_CASE)
-
-    // 2. M-PESA Till/Paybill (Buy Goods): Matches "RQK7... Confirmed. Ksh100.00 paid to [Business Name]"
     private val mpesaMerchantRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\sKsh\s?([\d,]+\.\d{2})\spaid\sto\s(.+?)\.""", RegexOption.IGNORE_CASE)
-
-    // 3. AIRTEL MONEY: Matches "Trans.ID: [ID] ... Amount: Ksh [Amt] from [Name]"
     private val airtelRegex = Regex("""ID:\s?(\w+).*?Amount:\s?Ksh\s?([\d,]+\.\d{2})\sfrom\s(.+?)(?:\son|$)""", RegexOption.IGNORE_CASE)
-
-    // 4. BANK (Generic): Matches "Ksh\s?([\d,]+\.\d{2}).*?by\s(.+)"
     private val bankRegex = Regex("""Ksh\s?([\d,]+\.\d{2}).*?by\s(.+)""", RegexOption.IGNORE_CASE)
 
-    fun parse(sender: String, body: String): TransactionData? {
+    fun parse(sender: String, body: String): TransactionEntity? {
         return try {
             when {
                 sender.contains("MPESA", true) -> {
-                    // Try Received Pattern first, then Merchant Pattern
                     val match = mpesaReceivedRegex.find(body) ?: mpesaMerchantRegex.find(body)
                     match?.let {
                         val (ref, amt, name) = it.destructured
-                        TransactionData(ref, cleanAmount(amt), name.trim(), "Today", "MPESA")
+                        TransactionEntity(
+                            ref = ref,
+                            amount = cleanAmount(amt),
+                            person = name.trim(),
+                            category = "MPESA",
+                            rawMessage = body
+                        )
                     }
                 }
                 sender.contains("AIRTEL", true) -> {
                     airtelRegex.find(body)?.let {
                         val (ref, amt, name) = it.destructured
-                        TransactionData(ref, cleanAmount(amt), name.trim(), "Today", "AIRTEL")
+                        TransactionEntity(
+                            ref = ref,
+                            amount = cleanAmount(amt),
+                            person = name.trim(),
+                            category = "AIRTEL",
+                            rawMessage = body
+                        )
                     }
                 }
-                // Checks for Family Bank, Equity (400000), or NCBA
                 sender.contains("FamilyBank", true) || sender.contains("222111", true) || sender.contains("400000", true) -> {
                     bankRegex.find(body)?.let {
                         val (amt, name) = it.destructured
-                        TransactionData("BANK-REF", cleanAmount(amt), name.trim(), "Today", "BANK")
+                        // For banks without a clear ref in the regex, we generate a unique one
+                        TransactionEntity(
+                            ref = "BNK-${System.currentTimeMillis()}",
+                            amount = cleanAmount(amt),
+                            person = name.trim(),
+                            category = "BANK",
+                            rawMessage = body
+                        )
                     }
                 }
                 else -> null
