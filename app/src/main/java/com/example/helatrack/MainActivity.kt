@@ -19,6 +19,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 
 // 1. THIS IS THE CRITICAL IMPORT
+import com.example.helatrack.ui.insights.InsightsView
 import com.example.helatrack.ui.home.HomeView
 import com.example.helatrack.ui.transactions.TransactionsView
 import com.example.helatrack.ui.onboarding.OnboardingView
@@ -28,6 +29,7 @@ import com.example.helatrack.ui.profile.EditProfileView
 import com.example.helatrack.ui.profile.ProfileScreen
 import com.example.helatrack.ui.theme.HelaTrackTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 
 class MainActivity : ComponentActivity() {
     private val userViewModel by viewModels<UserViewModel>()
@@ -100,6 +102,7 @@ fun GoWalletApp(viewModel: UserViewModel) {
             when (currentDestination) {
                 AppDestinations.HOME -> HomeView()
                 AppDestinations.TRANSACTIONS -> TransactionsView(viewModel = viewModel)
+                AppDestinations.INSIGHTS -> InsightsView(viewModel = viewModel)
                 AppDestinations.PROFILE ->  {
                 // Toggle between the Profile list and the Edit form
                 if (isEditingProfile) {
@@ -129,6 +132,7 @@ enum class AppDestinations(
 ) {
     HOME("Home", Icons.Default.Home),
     TRANSACTIONS("Transactions", Icons.Default.BarChart),
+    INSIGHTS("Insights", Icons.AutoMirrored.Filled.TrendingUp),
     PROFILE("Profile", Icons.Default.Person),
 }
 
