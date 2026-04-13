@@ -15,8 +15,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import android.Manifest
+import androidx.compose.foundation.layout.Box
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 
 // 1. THIS IS THE CRITICAL IMPORT
 import com.example.helatrack.ui.insights.InsightsView
@@ -30,10 +32,13 @@ import com.example.helatrack.ui.profile.ProfileScreen
 import com.example.helatrack.ui.theme.HelaTrackTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
-    private val userViewModel by viewModels<UserViewModel>()
-
+    private val userViewModel: UserViewModel by viewModels {
+        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -143,6 +148,27 @@ enum class AppDestinations(
 @Composable
 fun GoWalletAppPreview() {
     HelaTrackTheme {
-        GoWalletApp(UserViewModel())
+        // Use a "Surface" to ensure the background isn't transparent/white
+        Surface(
+            modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            // We use a dummy UI state instead of the real app logic
+            // to stop the Preview from trying to open a database.
+            MockOnboardingPreview()
+        }
+    }
+}
+
+@Composable
+fun MockOnboardingPreview() {
+    // This allows you to see the UI layout without
+    // triggering the ViewModel's database logic.
+    Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+        Text("HelaTrack Preview Mode", style = MaterialTheme.typography.labelSmall)
+        // Add a placeholder for where the actual view would be
+        Box(modifier = androidx.compose.ui.Modifier.weight(1f)) {
+            Text("Onboarding/Home UI will appear here in the real app.")
+        }
     }
 }

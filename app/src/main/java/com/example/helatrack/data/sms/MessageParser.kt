@@ -7,8 +7,7 @@ object MessageParser {
     private val mpesaReceivedRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\sKsh\s?([\d,]+\.\d{2})\sreceived\sfrom\s(.+?)(?:\s\d+|$)""", RegexOption.IGNORE_CASE)
     private val mpesaMerchantRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\sKsh\s?([\d,]+\.\d{2})\spaid\sto\s(.+?)\.""", RegexOption.IGNORE_CASE)
     private val airtelRegex = Regex("""ID:\s?(\w+).*?Amount:\s?Ksh\s?([\d,]+\.\d{2})\sfrom\s(.+?)(?:\son|$)""", RegexOption.IGNORE_CASE)
-    private val bankRegex = Regex("""Ksh\s?([\d,]+\.\d{2}).*?by\s(.+)""", RegexOption.IGNORE_CASE)
-
+    private val bankRegex = Regex("""(?:Ref|ID):\s?(\w+).*?Ksh\s?([\d,]+\.\d{2}).*?by\s(.+)""", RegexOption.IGNORE_CASE)
     fun parse(sender: String, body: String): TransactionEntity? {
         return try {
             when {

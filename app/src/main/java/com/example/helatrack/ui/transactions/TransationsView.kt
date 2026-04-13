@@ -174,6 +174,8 @@ fun TransactionsView(viewModel: UserViewModel) {
 @Composable
 fun TransactionsViewPreview() {
     HelaTrackTheme {
-        TransactionsView(viewModel = UserViewModel())
+        // This is a "fake" application instance just for the compiler
+        val dummyApp = android.app.Application()
+        TransactionsView(viewModel = UserViewModel(dummyApp))
     }
 }

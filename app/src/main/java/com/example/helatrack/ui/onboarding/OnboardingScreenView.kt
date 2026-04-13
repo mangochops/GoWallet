@@ -26,6 +26,8 @@ import com.example.helatrack.model.PaymentProvider
 import com.example.helatrack.model.PaymentMethods
 import com.example.helatrack.model.UserViewModel
 import com.example.helatrack.ui.theme.HelaTrackTheme
+import android.app.Application
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
@@ -58,12 +60,12 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
                     title = "Smart Insights",
                     desc = "See your earning with clean, automated graphs.",
                     resId = R.raw.analytics,
-                    onNext = { scope.launch { pagerState.animateScrollToPage(2) } }
+                    onNext = { scope.launch { pagerState.animateScrollToPage(3) } }
                 )
                 3 -> PaymentSelectionPage(
                     onMethodSelected = { method ->
                         selectedMethod = method
-                        scope.launch { pagerState.animateScrollToPage(3) }
+                        scope.launch { pagerState.animateScrollToPage(4) }
                     }
                 )
                 4 -> {
@@ -262,9 +264,12 @@ fun CredentialsPage(provider: PaymentProvider, onFinish: (String, String) -> Uni
 @Composable
 fun OnboardingPreview() {
     HelaTrackTheme {
+        // Quick Fix: Use LocalContext or a dummy Application instance for the ViewModel
+        val context = LocalContext.current
+        val application = context.applicationContext as? Application ?: Application()
         OnboardingView(
             onFinish = {},
-            viewModel = UserViewModel()
+            viewModel = UserViewModel(application)
             )
     }
 }
