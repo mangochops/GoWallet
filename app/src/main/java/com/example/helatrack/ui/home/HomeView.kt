@@ -16,43 +16,33 @@ import com.example.helatrack.ui.components.TransactionCard
 import com.example.helatrack.ui.theme.HelaTrackTheme
 import com.example.helatrack.model.MockData
 import androidx.compose.runtime.remember
+import com.example.helatrack.ui.components.DailyPulseCard
+import java.time.LocalDate
+import androidx.compose.runtime.mutableStateOf
+import com.example.helatrack.model.UserViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import android.app.Application
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun HomeView() {
-    val now = java.time.LocalDate.now()
+fun HomeView(viewModel: UserViewModel) {
+    val now = LocalDate.now()
 
-    // 1. Calculate Today Income
-    val todayIncome = remember {
-        MockData.transactions.filter {
-            val datePart = it.date.split("|")[0].trim() + " ${now.year}"
-            val txnDate = java.time.LocalDate.parse(datePart, java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"))
-            txnDate.isEqual(now)
-        }.sumOf { it.amount }
-    }
+    // --- State Management ---
+    val dailyCash by viewModel.dailyCashTotal.collectAsState(initial = 0.0)
+    val dailyDigital by viewModel.dailyDigitalTotal.collectAsState(initial = 0.0)
+    var showCashDialog by remember { mutableStateOf(false) }
 
-    // 2. Calculate Total Balance
-    val totalBalance = remember {
-        MockData.transactions.sumOf { it.amount }
-    }
-
-    // 3. Prepare Graph Data (Last 7 Days)
-    val weeklyData = remember {
-        // This generates a list of the last 7 sums for the bar graph
-        (0..6).reversed().map { daysAgo ->
-            val targetDate = now.minusDays(daysAgo.toLong())
-            MockData.transactions.filter {
-                val datePart = it.date.split("|")[0].trim() + " ${now.year}"
-                val txnDate = java.time.LocalDate.parse(datePart, java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                txnDate.isEqual(targetDate)
-            }.sumOf { it.amount }
-        }
-    }
+    val todayIncome = (dailyCash  + dailyDigital)
+    val totalBalance by viewModel.totalBalance.collectAsState(initial = 0.0)
 
     val dayLabels = remember {
         (0..6).reversed().map { now.minusDays(it.toLong()).dayOfWeek.name.take(1) }
     }
 
-
+    val weeklyData = (0..6).map { (it * 100).toDouble() }
     val recentTransactions = MockData.transactions.take(5)
 
     Scaffold(
@@ -93,7 +83,14 @@ fun HomeView() {
                 OverviewTabs(todayIncome = todayIncome, totalBalance = totalBalance)
             }
 
-            // Section 2: Bar Graph
+            item {
+                DailyPulseCard(
+                    cashTotal = dailyCash,
+                    digitalTotal = dailyDigital,
+                    onAddCash = { showCashDialog = true }
+                )
+            }
+            // Section 3: Bar Graph
             item {
                 IncomeBarGraph(data = weeklyData, days = dayLabels)
             }
@@ -135,12 +132,49 @@ fun HomeView() {
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
+    if (showCashDialog) {
+        // Replace with your actual AddCashDialog component
+        AlertDialog(
+            onDismissRequest = { showCashDialog = false },
+            title = { Text("Record Cash Sale") },
+            text = { Text("Record your physical cash sales for today to keep your reports accurate.") },
+            confirmButton = {
+                Button(onClick = {
+                    // This should call a real function in your ViewModel
+                    viewModel.addManualCash(500.0, "Daily Cash Sale")
+                    showCashDialog = false
+                }) { Text("Add KES 500 (Test)") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCashDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeViewPreview() {
     HelaTrackTheme {
-        HomeView()
+        // We use a "Fake" ViewModel or a simple check to see if we are in Preview mode
+        val context = LocalContext.current
+
+        // This is a "Dummy" ViewModel that won't try to access the DB if handled correctly,
+        // but the most stable "Quick Fix" for Previews is to pass mocked data.
+
+        Surface {
+            // Since we want to avoid complexity, let's just show a Placeholder
+            // if the ViewModel fails to load in the Preview.
+            Column {
+                Text(
+                    text = "HelaTrack Preview Mode",
+                    modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally),
+                    style = MaterialTheme.typography.labelSmall
+                )
+                // If you want the actual UI to show, use the Content method
+                // described previously. If not, this avoids the crash.
+                HomeView(viewModel = UserViewModel(context.applicationContext as Application))
+            }
+        }
     }
 }

@@ -105,7 +105,7 @@ fun GoWalletApp(viewModel: UserViewModel) {
         ) {
             // The Navigation Logic
             when (currentDestination) {
-                AppDestinations.HOME -> HomeView()
+                AppDestinations.HOME -> HomeView(viewModel = viewModel)
                 AppDestinations.TRANSACTIONS -> TransactionsView(viewModel = viewModel)
                 AppDestinations.INSIGHTS -> InsightsView(viewModel = viewModel)
                 AppDestinations.PROFILE ->  {

@@ -49,6 +49,20 @@ object MessageParser {
                         )
                     }
                 }
+                sender.contains("Equity", true) || sender.contains("247247", true) || sender.contains("400000", true) -> {
+                    bankRegex.find(body)?.let {
+                        val (amt, name) = it.destructured
+                        // For banks without a clear ref in the regex, we generate a unique one
+                        TransactionEntity(
+                            ref = "EQ-BNK-${System.currentTimeMillis()}", // Unique prefix for Equity
+                            amount = cleanAmount(amt),
+                            person = name.trim().take(25), // Clean up and limit length
+                            category = "BANK",
+                            timestamp = System.currentTimeMillis(),
+                            rawMessage = body
+                        )
+                    }
+                }
                 else -> null
             }
         } catch (e: Exception) {

@@ -26,6 +26,14 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     val selectedProvider: StateFlow<PaymentProvider?> = _selectedProvider
 
     // --- Insights Data (Money-In) ---
+    private val startOfDay: Long
+        get() = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
     private val startOfMonth: Long
         get() = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
@@ -37,6 +45,25 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     // Collect totals from Room
     // Updated calculation in UserViewModel to catch all digital sources
+    // --- NEW: Missing Daily Flows for HomeView ---
+    val dailyDigitalTotal: Flow<Double> = dao.getAllTransactions().map { list ->
+        list.filter {
+            it.timestamp >= startOfDay &&
+                    (it.category == "MPESA" || it.category == "AIRTEL" || it.category == "BANK")
+        }.sumOf { it.amount }
+    }.distinctUntilChanged()
+
+    val dailyCashTotal: Flow<Double> = dao.getAllTransactions().map { list ->
+        list.filter {
+            it.category == "CASH" && it.timestamp >= startOfDay
+        }.sumOf { it.amount }
+    }.distinctUntilChanged()
+
+    // --- NEW: Missing Total Balance for HomeView ---
+    val totalBalance: Flow<Double> = dao.getAllTransactions().map { list ->
+        list.sumOf { it.amount }
+    }.distinctUntilChanged()
+
     val monthlyDigitalTotal: Flow<Double> = dao.getAllTransactions().map { list ->
         list.filter {
             it.timestamp >= startOfMonth &&
