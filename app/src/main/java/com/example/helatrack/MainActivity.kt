@@ -34,6 +34,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.ui.platform.LocalContext
+import androidx.work.Constraints
+import java.util.concurrent.TimeUnit
+import java.util.Calendar
+import android.content.Context
+import com.example.helatrack.worker.EodSummaryWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+
+
 
 class MainActivity : ComponentActivity() {
     private val userViewModel: UserViewModel by viewModels {
@@ -56,8 +66,34 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun scheduleEodWork(context: Context) {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.HOUR_OF_DAY, 20) // 8:00 PM
+    calendar.set(Calendar.MINUTE, 0)
+
+    var delay = calendar.timeInMillis - System.currentTimeMillis()
+    if (delay < 0) {
+        // If it's already past 8PM, schedule for tomorrow
+        delay += TimeUnit.DAYS.toMillis(1)
+    }
+
+    val eodRequest = PeriodicWorkRequestBuilder<EodSummaryWorker>(24, TimeUnit.HOURS)
+        .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+        .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "EOD_SUMMARY",
+        ExistingPeriodicWorkPolicy.KEEP,
+        eodRequest
+    )
+}
+
+
 @Composable
 fun GoWalletApp(viewModel: UserViewModel) {
+    val context = LocalContext.current
+
     var showOnboarding by rememberSaveable { mutableStateOf(true) }
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
 
@@ -70,7 +106,7 @@ fun GoWalletApp(viewModel: UserViewModel) {
     ) { permissions ->
         val receiveGranted = permissions[Manifest.permission.RECEIVE_SMS] ?: false
         val readGranted = permissions[Manifest.permission.READ_SMS] ?: false
-
+        val notifyGranted = permissions.getOrElse(Manifest.permission.POST_NOTIFICATIONS) { false }
         if (receiveGranted && readGranted) {
             // Full access granted!
         }
@@ -85,9 +121,11 @@ fun GoWalletApp(viewModel: UserViewModel) {
                 smsPermissionLauncher.launch(
                     arrayOf(
                         Manifest.permission.RECEIVE_SMS,
-                        Manifest.permission.READ_SMS
+                        Manifest.permission.READ_SMS,
+                        Manifest.permission.POST_NOTIFICATIONS
                     )
                 )
+                scheduleEodWork(context)
                 showOnboarding = false
         })
     } else {

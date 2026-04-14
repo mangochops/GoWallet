@@ -75,6 +75,7 @@ project.tasks.configureEach {
 dependencies {
     implementation(libs.androidx.compose.foundation)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Room - Ensure your libs.versions.toml uses Room 2.7.0 or 2.8.x for KSP 2 support
     ksp(libs.androidx.room.compiler)

@@ -8,6 +8,11 @@ import com.example.helatrack.data.local.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.core.app.NotificationCompat
+import com.example.helatrack.data.local.TransactionEntity
+import android.app.NotificationManager
+import android.os.Build
+import android.app.NotificationChannel
 
 class SmsReceiver : BroadcastReceiver() {
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -45,12 +50,45 @@ class SmsReceiver : BroadcastReceiver() {
                         }
 
                         // 3. Persist with refined category
+                        val finalEntity = entity.copy(category = refinedCategory)
+
                         scope.launch {
-                            dao.insertTransaction(entity.copy(category = refinedCategory))
+                            dao.insertTransaction(finalEntity)
+                            showNotification(
+                                context,
+                                finalEntity
+                            )
                         }
                     }
                 }
             }
         }
     }
+}
+
+private fun showNotification(context: Context, transaction: TransactionEntity) {
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val channelId = "transaction_alerts"
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            channelId,
+            "Transaction Alerts",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Shows notifications for new incoming transactions"
+            setShowBadge(true) // CRITICAL: This enables the icon badge
+        }
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    val builder = NotificationCompat.Builder(context, channelId)
+        .setSmallIcon(android.R.drawable.ic_dialog_info) // Replace with your app icon
+        .setContentTitle("New ${transaction.category} Transaction")
+        .setContentText("KES ${transaction.amount} received from ${transaction.person}")
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setNumber(1) // Tells the launcher to show a badge count
+        .setAutoCancel(true)
+
+    notificationManager.notify(transaction.timestamp.toInt(), builder.build())
 }

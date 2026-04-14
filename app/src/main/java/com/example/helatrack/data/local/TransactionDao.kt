@@ -29,6 +29,9 @@ interface TransactionDao {
     fun getTop3Customers(startTime: Long): Flow<List<CustomerPaymentSummary>>
 
 
+    @Query("SELECT * FROM transactions WHERE timestamp >= :startTime")
+    suspend fun getTransactionsAfter(startTime: Long): List<TransactionEntity>
+
     @Delete
     suspend fun deleteTransaction(transaction: TransactionEntity)
 }
