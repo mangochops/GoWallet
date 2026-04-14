@@ -66,10 +66,13 @@ fun GoWalletApp(viewModel: UserViewModel) {
 
     // --- SMS PERMISSION LOGIC ---
     val smsPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // Permission granted! The SmsReceiver will now start catching messages.
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val receiveGranted = permissions[Manifest.permission.RECEIVE_SMS] ?: false
+        val readGranted = permissions[Manifest.permission.READ_SMS] ?: false
+
+        if (receiveGranted && readGranted) {
+            // Full access granted!
         }
     }
 
@@ -79,8 +82,13 @@ fun GoWalletApp(viewModel: UserViewModel) {
             viewModel = viewModel,
             onFinish = {
             // Request permission right as they finish onboarding
-            smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS)
-            showOnboarding = false
+                smsPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.RECEIVE_SMS,
+                        Manifest.permission.READ_SMS
+                    )
+                )
+                showOnboarding = false
         })
     } else {
         NavigationSuiteScaffold(

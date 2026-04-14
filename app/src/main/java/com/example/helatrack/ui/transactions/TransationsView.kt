@@ -26,6 +26,7 @@ import com.example.helatrack.model.UserViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import com.example.helatrack.data.local.TransactionEntity
 
 // Enum to manage our filter states
 enum class TimeFilter(val label: String) {
@@ -41,31 +42,29 @@ fun TransactionsView(viewModel: UserViewModel) {
     val context = LocalContext.current // Fix: Resolves 'context' reference error
     val businessName by viewModel.businessName.collectAsState() // Fix: Resolves 'businessName' error
 
+    val realTransactions by viewModel.allTransactions.collectAsState(initial = emptyList())
+
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedFilter by rememberSaveable { mutableStateOf(TimeFilter.ALL) }
 
     // Logic to filter transactions based on both Search and Time Tags
-    val filteredTransactions = remember(searchQuery, selectedFilter) {
+    val filteredTransactions = remember(realTransactions,searchQuery, selectedFilter) {
         val now = LocalDate.now()
-        val formatter = DateTimeFormatter.ofPattern("dd MMM | hh:mm a")
 
-        MockData.transactions.filter { transaction ->
-            val matchesSearch = transaction.person.contains(searchQuery, ignoreCase = true) ||
-                    transaction.id.contains(searchQuery, ignoreCase = true)
+        realTransactions.filter { entity ->
+            val matchesSearch = entity.person.contains(searchQuery, ignoreCase = true) ||
+                    entity.ref.contains(searchQuery, ignoreCase = true)
 
-            val matchesFilter = try {
-                // Parse the date part only (e.g., "08 Apr")
-                val datePart = transaction.date.split("|")[0].trim() + " ${now.year}"
-                val txnDate = LocalDate.parse(datePart, DateTimeFormatter.ofPattern("dd MMM yyyy"))
+            // Time filter logic using the Long timestamp
+            val txnDate = java.time.Instant.ofEpochMilli(entity.timestamp)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate()
 
-                when (selectedFilter) {
-                    TimeFilter.ALL -> true
-                    TimeFilter.TODAY -> txnDate.isEqual(now)
-                    TimeFilter.THIS_WEEK -> ChronoUnit.DAYS.between(txnDate, now) <= 7
-                    TimeFilter.THIS_MONTH -> txnDate.month == now.month && txnDate.year == now.year
-                }
-            } catch (e: Exception) {
-                true // Fallback to show transaction if date parsing fails
+            val matchesFilter = when (selectedFilter) {
+                TimeFilter.ALL -> true
+                TimeFilter.TODAY -> txnDate.isEqual(now)
+                TimeFilter.THIS_WEEK -> ChronoUnit.DAYS.between(txnDate, now) <= 7
+                TimeFilter.THIS_MONTH -> txnDate.month == now.month && txnDate.year == now.year
             }
 
             matchesSearch && matchesFilter

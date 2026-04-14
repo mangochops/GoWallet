@@ -12,9 +12,20 @@ import androidx.compose.ui.unit.dp
 import com.example.helatrack.model.Transaction
 import com.example.helatrack.model.TransactionType
 import com.example.helatrack.ui.theme.HelaTrackTheme
+import com.example.helatrack.data.local.TransactionEntity
+import androidx.compose.runtime.remember
+import java.util.Locale
+import java.util.Date
+import java.text.SimpleDateFormat
 
 @Composable
-fun TransactionCard(transaction: Transaction) {
+fun TransactionCard(transaction: TransactionEntity) {
+    // Format the timestamp into human-readable strings
+    val dateFormatter = remember { SimpleDateFormat("dd MMM", Locale.getDefault()) }
+    val timeFormatter = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+
+    val dateString = dateFormatter.format(Date(transaction.timestamp))
+    val timeString = timeFormatter.format(Date(transaction.timestamp))
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -38,7 +49,7 @@ fun TransactionCard(transaction: Transaction) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = transaction.id, // Changed from .reference to .id
+                    text = transaction.ref, // Changed from .reference to .id
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -51,7 +62,7 @@ fun TransactionCard(transaction: Transaction) {
                     fontWeight = FontWeight.ExtraBold
                 )
                 Text(
-                    text = "${transaction.date} | ${transaction.time}",
+                    text = "$dateString | $timeString",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -64,17 +75,16 @@ fun TransactionCard(transaction: Transaction) {
 @Composable
 fun TransactionCardPreview() {
     HelaTrackTheme {
-        val mockTransaction = Transaction(
-            id = "RCV123456",
+        val mockEntity = TransactionEntity(
+            ref = "RCV123456",
             person = "Mary Wangeci",
             amount = 2550.0,
-            date = "05 Apr",
-            time = "14:30",
-            type = TransactionType.MPESA
+            category = "MPESA",
+            timestamp = System.currentTimeMillis()
         )
 
         Box(modifier = Modifier.padding(16.dp)) {
-            TransactionCard(transaction = mockTransaction)
+            TransactionCard(transaction = mockEntity)
         }
     }
 }

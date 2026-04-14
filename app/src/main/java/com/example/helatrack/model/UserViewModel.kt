@@ -86,6 +86,11 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             .take(3)
     }
 
+    // Add this to your UserViewModel.kt
+    val allTransactions: Flow<List<TransactionEntity>> = dao.getAllTransactions()
+        .map { list -> list.sortedByDescending { it.timestamp } }
+        .distinctUntilChanged()
+
     // --- Actions ---
     fun addManualCash(amount: Double, person: String) {
         viewModelScope.launch {
@@ -111,5 +116,13 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         _businessName.value = ""
         _identifier.value = ""
         _selectedProvider.value = null
+    }
+
+    init {
+        viewModelScope.launch {
+            allTransactions.collect { list ->
+                android.util.Log.d("HelaTrackDB", "Total transactions in DB: ${list.size}")
+            }
+        }
     }
 }

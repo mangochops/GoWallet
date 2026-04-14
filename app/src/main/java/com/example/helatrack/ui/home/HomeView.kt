@@ -35,6 +35,7 @@ fun HomeView(viewModel: UserViewModel) {
     val dailyDigital by viewModel.dailyDigitalTotal.collectAsState(initial = 0.0)
     var showCashDialog by remember { mutableStateOf(false) }
 
+    val realTransactions by viewModel.allTransactions.collectAsState(initial = emptyList())
     val todayIncome = (dailyCash  + dailyDigital)
     val totalBalance by viewModel.totalBalance.collectAsState(initial = 0.0)
 
@@ -124,8 +125,9 @@ fun HomeView(viewModel: UserViewModel) {
             }
 
             // Section 4: The Paginated List
-            items(recentTransactions) { transaction ->
-                TransactionCard(transaction = transaction)
+            items(realTransactions) { entity ->
+                TransactionCard(transaction = entity)
+
             }
 
             // Add some bottom padding so the last card isn't cut off
