@@ -14,6 +14,7 @@ import android.app.NotificationManager
 import android.os.Build
 import android.app.NotificationChannel
 import android.util.Log
+import com.example.helatrack.R
 
 class SmsReceiver : BroadcastReceiver() {
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -93,10 +94,17 @@ private fun showNotification(context: Context, transaction: TransactionEntity) {
         notificationManager.createNotificationChannel(channel)
     }
 
+    // 1. Format the amount to remove decimals for whole numbers
+    val formattedAmount = if (transaction.amount % 1 == 0.0) {
+        transaction.amount.toInt().toString() // Shows "1000" instead of "1000.0"
+    } else {
+        String.format("%.2f", transaction.amount) // Shows "1000.50" if there are cents
+    }
+
     val builder = NotificationCompat.Builder(context, channelId)
-        .setSmallIcon(android.R.drawable.ic_dialog_info) // Replace with your app icon
+        .setSmallIcon(R.drawable.ic_launcher_foreground) // Replace with your app icon
         .setContentTitle("New ${transaction.category} Transaction")
-        .setContentText("KES ${transaction.amount} received from ${transaction.person}")
+        .setContentText("KES $formattedAmount received from ${transaction.person}")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setNumber(1) // Tells the launcher to show a badge count
         .setAutoCancel(true)

@@ -4,11 +4,11 @@ import android.util.Log
 import com.example.helatrack.data.local.TransactionEntity
 
 object MessageParser {
-    private val mpesaReceivedRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\sreceived\sfrom\s(.+?)(?:\s\d+|$)""", RegexOption.IGNORE_CASE)
-    private val mpesaMerchantRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\spaid\sto\s(.+?)\.""", RegexOption.IGNORE_CASE)
-    private val airtelRegex = Regex("""ID:\s?(\w+).*?Amount:\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\sfrom\s(.+?)(?:\son|$)""", RegexOption.IGNORE_CASE)
-    // This captures: 1. Amount, 2. The Recipient/Description
-    private val bankRegex = Regex("""(?:Ksh|KES)\s?([\d,]+\.\d{2})\sby\s(.+)""", RegexOption.IGNORE_CASE)
+    // This version stops capturing the name as soon as it hits " on" or a period
+    private val mpesaReceivedRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\sreceived\sfrom\s(.+?)(?:\son|\.|$|(?:\s\d+))""", RegexOption.IGNORE_CASE)
+    private val mpesaMerchantRegex = Regex("""([A-Z0-9]{10})\sConfirmed\.\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\spaid\sto\s(.+?)(?:\son|\.|$|(?:\s\d+))""", RegexOption.IGNORE_CASE)
+    private val airtelRegex = Regex("""ID:\s?(\w+).*?Amount:\s(?:Ksh|KES)\s?([\d,]+\.\d{2})\sfrom\s(.+?)(?:\son|$)""", RegexOption.IGNORE_CASE)    // This captures: 1. Amount, 2. The Recipient/Description
+    private val bankRegex = Regex("""(?:Ksh|KES)\s?([\d,]+\.\d{2})\sby\s(.+?)(?:\son|\.|$|(?:\s\d+))""", RegexOption.IGNORE_CASE)
     fun parse(sender: String, body: String): TransactionEntity? {
         return try {
             when {
