@@ -13,11 +13,15 @@ import com.example.helatrack.data.local.TransactionEntity
 import android.app.NotificationManager
 import android.os.Build
 import android.app.NotificationChannel
+import android.util.Log
 
 class SmsReceiver : BroadcastReceiver() {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.d("HelaTrack_Debug", "onReceive triggered!")
+        Log.d("HelaTrack_Debug", "Action: ${intent.action}")
+
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
 
@@ -33,8 +37,15 @@ class SmsReceiver : BroadcastReceiver() {
                 val sender = msg.displayOriginatingAddress ?: ""
                 val body = msg.messageBody ?: ""
 
+                Log.d("SmsReceiver", "Received from: $sender") // Helpful for Logcat
+
+                // FALLBACK: If prefs are empty, we allow MPESA for testing purposes
+                val isTracked = (savedMethod.isNotEmpty() && sender.contains(savedMethod, true)) ||
+                        (userIdentifier.isNotEmpty() && body.contains(userIdentifier)) ||
+                        sender.contains("MPESA", true) // Added fallback for testing
+
                 // 1. Filter: Does this message belong to our tracked provider?
-                if (sender.contains(savedMethod, ignoreCase = true) || body.contains(userIdentifier)) {
+                if (isTracked) {
 
                     val entity = MessageParser.parse(sender, body)
 

@@ -84,7 +84,7 @@ fun scheduleEodWork(context: Context) {
 
     WorkManager.getInstance(context).enqueueUniquePeriodicWork(
         "EOD_SUMMARY",
-        ExistingPeriodicWorkPolicy.KEEP,
+        ExistingPeriodicWorkPolicy.REPLACE,
         eodRequest
     )
 }
