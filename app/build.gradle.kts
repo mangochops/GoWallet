@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    kotlin("plugin.serialization") version "2.0.0"
+
 }
 
 android {
@@ -76,6 +78,16 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+
+
+    // Ktor
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.core)
+//    implementation(libs.ktor.client.plugins)             // Fixes the ClassNotFoundException
+    implementation(libs.ktor.client.content.negotiation)
 
     // Room - Ensure your libs.versions.toml uses Room 2.7.0 or 2.8.x for KSP 2 support
     ksp(libs.androidx.room.compiler)

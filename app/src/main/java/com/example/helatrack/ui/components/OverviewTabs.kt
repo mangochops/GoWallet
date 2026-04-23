@@ -36,7 +36,7 @@ fun OverviewTabs(
         )
 
         OverviewCard(
-            title = "Total Balance",
+            title = "Monthly Income",
             amount = if (isBalanceVisible) "KES ${"%,.0f".format(totalBalance)}" else "KES ••••••",
             isSelected = selectedTab == 1,
             showPrivacyToggle = true,

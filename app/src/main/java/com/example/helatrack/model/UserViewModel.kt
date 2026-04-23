@@ -5,27 +5,52 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.helatrack.data.local.AppDatabase
 import com.example.helatrack.data.local.TransactionEntity
+import com.example.helatrack.features.insights.CustomerPaymentSummary
+import com.example.helatrack.auth.SupabaseConfig
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import com.example.helatrack.ui.insights.CustomerPaymentSummary
 
 class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = AppDatabase.getDatabase(application)
     private val dao = db.transactionDao()
 
-    // --- Profile State ---
-    private val _businessName = MutableStateFlow("")
-    val businessName: StateFlow<String> = _businessName
+    // This ensures Supabase is NOT touched until fetchUserProfile() is called
+    private val supabase by lazy { SupabaseConfig.client }
+    // --- Core App State ---
+    private val _userProfile = MutableStateFlow<BusinessProfile?>(null)
+    val userProfile: StateFlow<BusinessProfile?> = _userProfile.asStateFlow()
 
-    private val _identifier = MutableStateFlow("")
-    val identifier: StateFlow<String> = _identifier
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // --- Onboarding Selection State ---
     private val _selectedProvider = MutableStateFlow<PaymentProvider?>(null)
     val selectedProvider: StateFlow<PaymentProvider?> = _selectedProvider
 
-    // --- Insights Data (Money-In) ---
+
+
+    // ... (Keep existing StateFlows) ...
+
+    init {
+        // Safe initialization
+        viewModelScope.launch {
+            try {
+                fetchUserProfile()
+            } catch (e: Exception) {
+                android.util.Log.e("HelaTrack", "Init Error: ${e.message}")
+                _isLoading.value = false
+            }
+        }
+    }
+
+
+
+    // --- Time Helpers ---
     private val startOfDay: Long
         get() = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -43,9 +68,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-    // Collect totals from Room
-    // Updated calculation in UserViewModel to catch all digital sources
-    // --- NEW: Missing Daily Flows for HomeView ---
+    // --- Data Flows (Room) ---
     val dailyDigitalTotal: Flow<Double> = dao.getAllTransactions().map { list ->
         list.filter {
             it.timestamp >= startOfDay &&
@@ -59,7 +82,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }.sumOf { it.amount }
     }.distinctUntilChanged()
 
-    // --- NEW: Missing Total Balance for HomeView ---
     val totalBalance: Flow<Double> = dao.getAllTransactions().map { list ->
         list.sumOf { it.amount }
     }.distinctUntilChanged()
@@ -77,7 +99,6 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }.sumOf { it.amount }
     }.distinctUntilChanged()
 
-
     val topCustomers: Flow<List<CustomerPaymentSummary>> = dao.getAllTransactions().map { list ->
         list.filter { it.timestamp >= startOfMonth }
             .groupBy { it.person }
@@ -86,12 +107,12 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             .take(3)
     }
 
-    // Add this to your UserViewModel.kt
     val allTransactions: Flow<List<TransactionEntity>> = dao.getAllTransactions()
         .map { list -> list.sortedByDescending { it.timestamp } }
         .distinctUntilChanged()
 
-    // --- Actions ---
+    // --- Actions & Database Operations ---
+
     fun addManualCash(amount: Double, person: String) {
         viewModelScope.launch {
             dao.insertTransaction(
@@ -106,22 +127,122 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateUserData(name: String, id: String, provider: PaymentProvider) {
-        _businessName.value = name
-        _identifier.value = id
-        _selectedProvider.value = provider
+    fun fetchUserProfile() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+
+                // Attempt to get user with a timeout or safety check
+                val auth = supabase.auth
+                var user = auth.currentUserOrNull()
+
+                if (user == null) {
+                    // 2. Perform the sign-in (this returns Unit)
+                    auth.signInAnonymously()
+                    // 3. Refresh the user reference from the auth state
+                    user = auth.currentUserOrNull()
+                }
+
+                if (user != null) {
+                    val profile = supabase.from("businesses")
+                        .select()
+                        .decodeSingleOrNull<BusinessProfile>()
+                    _userProfile.value = profile
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("HelaTrack", "Fetch Profile Error: ${e.message}")
+                _userProfile.value = null
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // In UserViewModel.kt
+
+    /**
+     * Specifically for existing users to change their details.
+     */
+    suspend fun updateBusinessProfile(newName: String, newId: String, providerId: String): Boolean {
+        return try {
+            val userId = supabase.auth.currentUserOrNull()?.id ?: return false
+
+            val updatedProfile = BusinessProfile(
+                userId = userId,
+                businessName = newName,
+                providerType = providerId,
+                identifierHash = newId
+            )
+
+            // Using our private helper (which performs the insert/upsert)
+            createBusinessProfile(updatedProfile)
+
+            // Update local state so the UI reflects changes immediately
+            _userProfile.value = updatedProfile
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("HelaTrack", "Update Profile Failed: ${e.message}")
+            false
+        }
+    }
+
+    // In UserViewModel.kt
+
+    /**
+     * High-level action called by the UI.
+     * Coordinates Auth, DB insertion, and State update.
+     */
+    suspend fun finalizeOnboarding(bName: String, id: String, providerId: String): Boolean {
+        return try {
+            android.util.Log.d("HelaDebug", "1. Start finalizeOnboarding")
+            val userId = ensureAuthenticatedUser()
+            android.util.Log.d("HelaDebug", "2. Auth success, UserID: $userId")
+
+            // 2. Create the data object
+            val profile = BusinessProfile(
+                userId = userId ?: return false,
+                businessName = bName,
+                providerType = providerId,
+                identifierHash = id
+            )
+
+            // 3. Perform the Database Operation
+            createBusinessProfile(profile)
+            android.util.Log.d("HelaDebug", "3. Supabase Insert Success")
+
+            // 4. Update the UI State
+            _userProfile.value = profile
+            android.util.Log.d("HelaDebug", "4. StateFlow updated with: ${profile.businessName}")
+            true
+        } catch (e: Exception) {
+            android.util.Log.e("HelaTrack", "Onboarding Failed: ${e.message}")
+            false
+        }
+    }
+
+    // Private helper: Does only Auth
+    private suspend fun ensureAuthenticatedUser(): String? {
+        val auth = supabase.auth
+        val user = auth.currentUserOrNull() ?: run {
+            auth.signInAnonymously()
+            auth.currentUserOrNull()
+        }
+        return user?.id
+    }
+
+    // Private helper: Does only Database Insertion
+    private suspend fun createBusinessProfile(profile: BusinessProfile) {
+        supabase.from("businesses").insert(profile)
     }
 
     fun clearData() {
-        _businessName.value = ""
-        _identifier.value = ""
-        _selectedProvider.value = null
-    }
-
-    init {
         viewModelScope.launch {
-            allTransactions.collect { list ->
-                android.util.Log.d("HelaTrackDB", "Total transactions in DB: ${list.size}")
+            try {
+                supabase.auth.signOut()
+                _userProfile.value = null
+                // Optional: dao.clearAllTransactions()
+            } catch (e: Exception) {
+                _userProfile.value = null
             }
         }
     }

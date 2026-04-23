@@ -13,14 +13,20 @@ import androidx.compose.ui.platform.LocalContext
 
 // 1. Set up the Dark Mode version (Deep Navy backgrounds)
 private val DarkColorScheme = darkColorScheme(
-    primary = HelaNavy,            // Keep buttons Navy Blue even in dark mode
-    onPrimary = White,             // Ensure text on buttons is White
-    secondary = HelaNavyLight,
-    tertiary = HelaAccent,
-    background = Color(0xFF000814), // A very deep, near-black navy
-    surface = HelaNavyLight,       // Cards should be slightly lighter than background
-    onBackground = White,          // Text on background should be white
-    onSurface = White
+    primary = HelaPurple,           // This will give you the purple buttons/accents
+    onPrimary = Color.White,
+
+    secondary = Color(0xFF232931),  // Soft gray for secondary buttons
+    onSecondary = Color.White,
+
+    background = HelaBackground,    // The 0xFF0B0E14 shade
+    onBackground = HelaTextPrimary,
+
+    surface = HelaSurface,          // Card backgrounds
+    onSurface = HelaTextPrimary,
+
+    surfaceVariant = Color(0xFF1C2128), // For slightly different card styles
+    onSurfaceVariant = HelaTextSecondary
 )
 
 // 2. Set up the Light Mode version (The standard "Clean" look)
@@ -32,7 +38,8 @@ private val LightColorScheme = lightColorScheme(
     surface = Color.White,
     onPrimary = Color.White,       // White text on blue buttons
     onBackground = HelaNavy,
-    onSurface = HelaNavy
+    onSurface = HelaNavy,
+//    accent = accent
 )
 
 @Composable

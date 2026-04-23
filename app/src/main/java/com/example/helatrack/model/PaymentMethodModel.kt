@@ -28,6 +28,13 @@ object PaymentMethods {
             brandColor = Color(0xFF00AA13)
         ),
         PaymentProvider(
+            id = "MPESA_PAYBILL",
+            name = "M-Pesa Paybill",
+            logoRes = R.drawable.lipa_na_mpesa,
+            identifierLabel = "Paybill Number",
+            brandColor = Color(0xFF00AA13)
+        ),
+        PaymentProvider(
             id = "AIRTEL",
             name = "Airtel Money",
             logoRes = R.drawable.airtel_money,
@@ -38,22 +45,30 @@ object PaymentMethods {
             id = "EQUITY",
             name = "Equity Bank",
             logoRes = R.drawable.equity,
-            identifierLabel = "Last 4 Digits of Acc",
+            identifierLabel = "Last 4 Digits of Account",
             brandColor = Color(0xFFA32A29) // Equity Maroon
         ),
         PaymentProvider(
             id = "FAMILY",
             name = "Family Bank",
             logoRes = R.drawable.family_bank,
-            identifierLabel = "Last 4 Digits of Acc",
+            identifierLabel = "Last 4 Digits of Account",
             brandColor = Color(0xFF0054A6) // Family Bank Blue
         ),
         PaymentProvider(
             id = "NCBA",
             name = "NCBA",
             logoRes = R.drawable.ncba,
-            identifierLabel = "Last 4 Digits of Acc",
-            brandColor = Color(0xFF002E5D) // NCBA Dark Blue
-        )
+            identifierLabel = "Last 4 Digits of Account",
+            brandColor = Color(0xFF453834) // NCBA Dark Blue
+        ),
+        PaymentProvider(
+            id = "ABSA",
+            name = "ABSA",
+            logoRes = R.drawable.absa_logo,
+            identifierLabel = "Last 4 Digits of Account",
+            brandColor = Color(0xFFeb3158) // NCBA Dark Blue
+        ),
+
     )
 }

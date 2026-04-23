@@ -1,5 +1,6 @@
-package com.example.helatrack.ui.transactions
+package com.example.helatrack.features.transactions
 
+import android.app.Application
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.helatrack.model.MockData
 import com.example.helatrack.ui.components.TransactionCard
 import com.example.helatrack.ui.theme.HelaTrackTheme
 import androidx.compose.ui.graphics.Color
@@ -24,9 +24,9 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.example.helatrack.model.UserViewModel
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import com.example.helatrack.data.local.TransactionEntity
+import java.time.Instant
+import java.time.ZoneId
 
 // Enum to manage our filter states
 enum class TimeFilter(val label: String) {
@@ -40,8 +40,10 @@ enum class TimeFilter(val label: String) {
 @Composable
 fun TransactionsView(viewModel: UserViewModel) {
     val context = LocalContext.current // Fix: Resolves 'context' reference error
-    val businessName by viewModel.businessName.collectAsState() // Fix: Resolves 'businessName' error
 
+// 1. FIXED: Observe the consolidated profile instead of a non-existent businessName flow
+    val profile by viewModel.userProfile.collectAsState()
+    val businessName = profile?.businessName ?: "My SME"
     val realTransactions by viewModel.allTransactions.collectAsState(initial = emptyList())
 
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -56,8 +58,8 @@ fun TransactionsView(viewModel: UserViewModel) {
                     entity.ref.contains(searchQuery, ignoreCase = true)
 
             // Time filter logic using the Long timestamp
-            val txnDate = java.time.Instant.ofEpochMilli(entity.timestamp)
-                .atZone(java.time.ZoneId.systemDefault())
+            val txnDate = Instant.ofEpochMilli(entity.timestamp)
+                .atZone(ZoneId.systemDefault())
                 .toLocalDate()
 
             val matchesFilter = when (selectedFilter) {
@@ -174,7 +176,7 @@ fun TransactionsView(viewModel: UserViewModel) {
 fun TransactionsViewPreview() {
     HelaTrackTheme {
         // This is a "fake" application instance just for the compiler
-        val dummyApp = android.app.Application()
+        val dummyApp = Application()
         TransactionsView(viewModel = UserViewModel(dummyApp))
     }
 }

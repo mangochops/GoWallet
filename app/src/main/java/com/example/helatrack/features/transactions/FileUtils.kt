@@ -1,4 +1,4 @@
-package com.example.helatrack.ui.transactions
+package com.example.helatrack.features.transactions
 
 import android.content.Context
 import android.graphics.Canvas
@@ -12,6 +12,7 @@ import android.content.Intent
 import android.net.Uri
 import com.example.helatrack.model.Transaction
 import com.example.helatrack.data.local.TransactionEntity
+import java.text.DateFormat
 import java.util.Locale
 import java.util.Date
 import java.text.SimpleDateFormat
@@ -35,7 +36,7 @@ fun exportTransactionsToPdf(context: Context, transactions: List<TransactionEnti
     yPosition += 30f
     paint.textSize = 12f
     paint.isFakeBoldText = false
-    canvas.drawText("Generated on: ${java.text.DateFormat.getDateTimeInstance().format(java.util.Date())}", 40f, yPosition, paint)
+    canvas.drawText("Generated on: ${DateFormat.getDateTimeInstance().format(Date())}", 40f, yPosition, paint)
 
     yPosition += 40f
     // Table Headers

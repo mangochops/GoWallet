@@ -27,14 +27,17 @@ fun ProfileScreen(
     onEditClick: () -> Unit,
     onLogout: () -> Unit
 ) {
-    // Collecting state from ViewModel to make the UI reactive
-    val businessName by viewModel.businessName.collectAsState()
-    val identifier by viewModel.identifier.collectAsState()
-    val selectedProvider by viewModel.selectedProvider.collectAsState()
+    // 1. Observe the consolidated userProfile state
+    val profile by viewModel.userProfile.collectAsState()
+
+    // 2. Map the saved provider string back to a PaymentProvider object for UI branding
+    val selectedProvider = remember(profile) {
+        PaymentMethods.providers.find { it.name == profile?.providerType }
+    }
 
     ProfileView(
-        businessName = businessName,
-        identifier = identifier,
+        businessName = profile?.businessName ?: "Business Account",
+        identifier = profile?.identifierHash ?: "N/A",
         selectedProvider = selectedProvider,
         onEditClick = onEditClick,
         onLogout = onLogout

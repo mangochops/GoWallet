@@ -1,5 +1,6 @@
 package com.example.helatrack.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,6 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.helatrack.ui.theme.HelaTrackTheme
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun DailyPulseCard(
@@ -29,8 +34,8 @@ fun DailyPulseCard(
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasCash) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+            containerColor = if (hasCash) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -43,42 +48,56 @@ fun DailyPulseCard(
                     Text(
                         text = "Daily Performance",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (hasCash) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSecondaryContainer
+                        color = if (hasCash) Color.White.copy(alpha = 0.9f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (totalSales > 0) "KES ${String.format("%,.0f", totalSales)}" else "Ready for today?",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (hasCash) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSecondaryContainer
+                        fontSize = 22.sp,
+                        color = if (hasCash) Color.White else MaterialTheme.colorScheme.onSurface
                     )
                 }
 
                 if (!hasCash) {
                     Button(
                         onClick = onAddCash,
+                        modifier = Modifier.height(40.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        shape = RoundedCornerShape(12.dp), // Pill/Rounded shape matching iOS
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = null,
+                            contentDescription = "Add Cash",
                             modifier = Modifier.size(18.dp)
                         )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Add Cash", style = MaterialTheme.typography.labelLarge)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Add Cash",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 } else {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Recorded",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Recorded",
+                            tint = MaterialTheme.colorScheme.primary, // Purple icon on white circle
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 

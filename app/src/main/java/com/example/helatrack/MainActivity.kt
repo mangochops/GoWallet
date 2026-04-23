@@ -19,15 +19,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import com.example.helatrack.ui.features.profile.EditProfileView
 
 // 1. THIS IS THE CRITICAL IMPORT
-import com.example.helatrack.ui.insights.InsightsView
+import com.example.helatrack.features.insights.InsightsView
 import com.example.helatrack.ui.home.HomeView
-import com.example.helatrack.ui.transactions.TransactionsView
+import com.example.helatrack.features.transactions.TransactionsView
 import com.example.helatrack.ui.onboarding.OnboardingView
 import com.example.helatrack.model.UserViewModel
 import androidx.activity.viewModels
-import com.example.helatrack.ui.profile.EditProfileView
 import com.example.helatrack.ui.profile.ProfileScreen
 import com.example.helatrack.ui.theme.HelaTrackTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +42,8 @@ import com.example.helatrack.worker.EodSummaryWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 
 
 
@@ -62,6 +64,9 @@ class MainActivity : ComponentActivity() {
                     GoWalletApp(userViewModel)
                 }
             }
+//            MaterialTheme {
+//                Text("If you can see this, the problem is in the ViewModel")
+//            }
         }
     }
 }
@@ -94,11 +99,12 @@ fun scheduleEodWork(context: Context) {
 fun GoWalletApp(viewModel: UserViewModel) {
     val context = LocalContext.current
 
-    var showOnboarding by rememberSaveable { mutableStateOf(true) }
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    val isLoading by viewModel.isLoading.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsState()
 
-    // Sub-navigation state for the Profile tab
+    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var isEditingProfile by rememberSaveable { mutableStateOf(false) }
+
 
     // --- SMS PERMISSION LOGIC ---
     val smsPermissionLauncher = rememberLauncherForActivityResult(
@@ -112,22 +118,31 @@ fun GoWalletApp(viewModel: UserViewModel) {
         }
     }
 
-    if (showOnboarding) {
+    if (isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    }
         // 2. Show Onboarding and hide the rest of the app
+    else if (userProfile == null) {
         OnboardingView(
             viewModel = viewModel,
             onFinish = {
-            // Request permission right as they finish onboarding
-                smsPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.RECEIVE_SMS,
-                        Manifest.permission.READ_SMS,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    )
+                val permissions = mutableListOf(
+                    Manifest.permission.RECEIVE_SMS,
+                    Manifest.permission.READ_SMS
                 )
+
+                // Only add notification permission if the phone is Android 13 or newer
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                }
+
+                smsPermissionLauncher.launch(permissions.toTypedArray())
                 scheduleEodWork(context)
-                showOnboarding = false
-        })
+
+            }
+        )
     } else {
         NavigationSuiteScaffold(
             navigationSuiteItems = {
@@ -143,7 +158,9 @@ fun GoWalletApp(viewModel: UserViewModel) {
                         selected = destination == currentDestination,
                         onClick = {
                             currentDestination = destination
-                            if (destination != AppDestinations.PROFILE) isEditingProfile = false
+                            if (destination != AppDestinations.PROFILE) {
+                                isEditingProfile = false
+                            }
                         }
                     )
                 }
@@ -167,7 +184,7 @@ fun GoWalletApp(viewModel: UserViewModel) {
                         onEditClick = { isEditingProfile = true },
                         onLogout = {
                             viewModel.clearData()
-                            showOnboarding = true
+
                         }
                     )
                 }

@@ -1,4 +1,4 @@
-package com.example.helatrack.ui.profile
+package com.example.helatrack.ui.features.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,31 +10,48 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.helatrack.model.UserViewModel
 import com.example.helatrack.ui.theme.HelaTrackTheme
+import com.example.helatrack.model.PaymentMethods
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditProfileView(viewModel: UserViewModel, onBack: () -> Unit) {
     // Collecting state from ViewModel
-    val currentName by viewModel.businessName.collectAsState()
-    val currentId by viewModel.identifier.collectAsState()
-    val provider by viewModel.selectedProvider.collectAsState()
+    val profile by viewModel.userProfile.collectAsState()
+    val scope = rememberCoroutineScope()
+    var isSaving by remember { mutableStateOf(false) }
 
-    // Local state for editing
-    var nameText by remember { mutableStateOf(currentName) }
-    var idText by remember { mutableStateOf(currentId) }
+    // 2. Initialize local state with current profile values
+    // We use PaymentMethods helper to find the provider by name for the label
+    val provider = PaymentMethods.providers.find { it.name == profile?.providerType }
 
-    EditProfileContent(
-        name = nameText,
-        id = idText,
-        label = provider?.identifierLabel ?: "ID",
-        onNameChange = { nameText = it },
-        onIdChange = { idText = it },
-        onSave = {
-            provider?.let { viewModel.updateUserData(nameText, idText, it) }
-            onBack()
-        },
-        onBack = onBack
+    var nameText by remember { mutableStateOf(profile?.businessName ?: "") }
+    var idText by remember { mutableStateOf(profile?.identifierHash ?: "") }
+
+    if (isSaving) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        EditProfileContent(
+            name = nameText,
+            id = idText,
+            label = provider?.identifierLabel ?: "Identifier",
+            onNameChange = { newName -> nameText = newName },
+            onIdChange = { newId -> idText = newId },
+            onSave = {
+                scope.launch {
+                    isSaving = true
+                    provider?.let { currentProvider ->
+                        val success = viewModel.updateBusinessProfile(nameText, idText, currentProvider.id)
+                        if (success) onBack()
+                    }
+                    isSaving = false
+                }
+            },
+            onBack = onBack
     )
-}
+}}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

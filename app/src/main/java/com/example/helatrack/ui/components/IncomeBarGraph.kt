@@ -62,7 +62,7 @@ fun IncomeBarGraph(data: List<Double>, days: List<String>) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .fillMaxHeight(barHeightFraction)
-                                    .background(MaterialTheme.colorScheme.primary) // The actual Data
+                                    .background(MaterialTheme.colorScheme.tertiary) // The actual Data
                             )
                         }
 

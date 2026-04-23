@@ -1,7 +1,7 @@
 package com.example.helatrack.data.local
 
 import androidx.room.*
-import com.example.helatrack.ui.insights.CustomerPaymentSummary
+import com.example.helatrack.features.insights.CustomerPaymentSummary
 import kotlinx.coroutines.flow.Flow
 
 @Dao

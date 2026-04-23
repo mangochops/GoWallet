@@ -1,4 +1,4 @@
-package com.example.helatrack.ui.insights
+package com.example.helatrack.features.insights
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring

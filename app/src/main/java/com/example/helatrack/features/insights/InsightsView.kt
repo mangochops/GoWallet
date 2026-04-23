@@ -1,4 +1,4 @@
-package com.example.helatrack.ui.insights
+package com.example.helatrack.features.insights
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -6,14 +6,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.helatrack.model.UserViewModel
 import com.example.helatrack.ui.theme.HelaTrackTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsView(viewModel: UserViewModel) {
     // Collecting real-time data flows from your ViewModel
@@ -24,6 +25,24 @@ fun InsightsView(viewModel: UserViewModel) {
     var showCashDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Insights",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = Color.Unspecified,
+                    navigationIconContentColor = Color.Unspecified,
+                    titleContentColor = Color.Unspecified,
+                    actionIconContentColor = Color.Unspecified
+                )
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showCashDialog = true },
@@ -44,13 +63,7 @@ fun InsightsView(viewModel: UserViewModel) {
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                item {
-                    Text(
-                        text = "Business Insights",
-                        style = MaterialTheme.typography.headlineMedium,
-                        modifier = Modifier.padding(top = 24.dp, bottom = 16.dp)
-                    )
-                }
+
 
                 item {
                     // This card reflects REAL database values
@@ -107,7 +120,7 @@ fun InsightsViewContentMock() {
         }
     ) { p ->
         Column(Modifier.padding(p).padding(16.dp)) {
-            Text("Business Insights", style = MaterialTheme.typography.headlineMedium)
+//            Text("Business Insights", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(16.dp))
             ExpandableMonthlyInsightCard(
                 monthName = "April Performance",

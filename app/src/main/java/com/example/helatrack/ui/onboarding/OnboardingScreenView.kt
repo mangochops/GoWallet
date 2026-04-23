@@ -37,6 +37,9 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
     // State to keep track of the full object selected in page 2
     var selectedMethod by remember { mutableStateOf<PaymentProvider?>(null) }
 
+    // State to show a loader on the final button if the network is slow
+    var isSubmitting by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
         HorizontalPager(
             state = pagerState,
@@ -73,9 +76,25 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
                     selectedMethod?.let { provider ->
                         CredentialsPage(
                             provider = provider,
+                            isLoading = isSubmitting,
                             onFinish = { bName, id ->
-                                viewModel.updateUserData(bName, id, provider)
-                                onFinish()
+                                // FIX: Wrap the suspend call in a coroutine scope
+                                scope.launch {
+                                    isSubmitting = true
+                                    val success = viewModel.finalizeOnboarding(
+                                        bName = bName,
+                                        id = id,
+                                        providerId = provider.id
+                                    )
+
+                                    if (success) {
+                                        onFinish()
+                                    } else {
+                                        isSubmitting = false
+                                        // You could trigger a Snackbar here
+                                        android.util.Log.e("HelaTrack", "Onboarding save failed")
+                                    }
+                                }
                             }
                         )
                     }
@@ -89,7 +108,7 @@ fun OnboardingView(onFinish: () -> Unit, viewModel: UserViewModel) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            repeat(5) { iteration ->
+            repeat(4) { iteration ->
                 val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else Color.LightGray
                 Box(
                     modifier = Modifier
@@ -185,7 +204,7 @@ fun PaymentSelectionPage(onMethodSelected: (PaymentProvider) -> Unit) {
 }
 
 @Composable
-fun CredentialsPage(provider: PaymentProvider, onFinish: (String, String) -> Unit) {
+fun CredentialsPage(provider: PaymentProvider, isLoading: Boolean, onFinish: (String, String) -> Unit) {
     var identifier by remember { mutableStateOf("") }
     var businessName by remember { mutableStateOf("") }
     val labelText = provider.identifierLabel
@@ -251,11 +270,11 @@ fun CredentialsPage(provider: PaymentProvider, onFinish: (String, String) -> Uni
             enabled = identifier.isNotEmpty() && businessName.isNotEmpty(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                "Start Tracking Payments",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium
-            )
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("Start Tracking Payments", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
