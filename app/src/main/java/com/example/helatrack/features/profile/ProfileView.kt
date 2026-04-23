@@ -91,6 +91,11 @@ fun ProfileView(
         ProfileItem(Icons.Default.Payments, selectedProvider?.identifierLabel ?: "ID", identifier, isClickable = true, onClick = onEditClick)
 
         Spacer(Modifier.height(32.dp))
+        SectionHeader("Support & Legal")
+        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
+        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
+        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
+
 
         // Add this if you want a dedicated button instead of just tap-to-edit rows
         Button(
@@ -144,6 +149,26 @@ fun ProfileItem(icon: ImageVector, label: String, value: String, isClickable: Bo
             Text(label, style = MaterialTheme.typography.bodySmall)
             Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
         }
+    }
+}
+
+@Composable
+fun ProfilePages(icon: ImageVector, label: String, value: String, isClickable: Boolean = false, onClick: () -> Unit = {}) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = isClickable) { onClick() }
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.width(16.dp))
+        Column {
+
+            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+        }
+        Spacer(Modifier.width(16.dp))
+
     }
 }
 

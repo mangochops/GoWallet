@@ -14,7 +14,7 @@ data class PaymentProvider(
 object PaymentMethods {
     val providers = listOf(
         PaymentProvider(
-            id = "MPESA_PERS",
+            id = "MPESA",
             name = "M-Pesa",
             logoRes = R.drawable.mpesa,
             identifierLabel = "Phone Number",

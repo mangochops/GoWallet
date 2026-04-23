@@ -17,15 +17,30 @@ import androidx.compose.runtime.remember
 import java.util.Locale
 import java.util.Date
 import java.text.SimpleDateFormat
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import java.nio.channels.spi.AsynchronousChannelProvider.provider
+import androidx.compose.material.icons.filled.Person
 
 @Composable
-fun TransactionCard(transaction: TransactionEntity) {
+fun TransactionCard(transaction: TransactionEntity, ) {
     // Format the timestamp into human-readable strings
     val dateFormatter = remember { SimpleDateFormat("dd MMM", Locale.getDefault()) }
     val timeFormatter = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     val dateString = dateFormatter.format(Date(transaction.timestamp))
     val timeString = timeFormatter.format(Date(transaction.timestamp))
+
+    val provider = remember(transaction.category) {
+        com.example.helatrack.model.PaymentMethods.providers.find {
+            it.id == transaction.category
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,6 +57,32 @@ fun TransactionCard(transaction: TransactionEntity) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 2. The Avatar Column
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(provider?.brandColor?.copy(alpha = 0.1f) ?: Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                if (provider != null) {
+                    Image(
+                        painter = painterResource(id = provider.logoRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    // Fallback if no provider is found
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
                     text = transaction.person, // Changed from .sender to .person
