@@ -172,7 +172,7 @@ fun AddCashDialog(onDismiss: () -> Unit, onConfirm: (Double, String) -> Unit) {
                 OutlinedTextField(
                     value = customer,
                     onValueChange = { customer = it },
-                    label = { Text("Customer Name") },
+                    label = { Text("Note e.g Sales") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
