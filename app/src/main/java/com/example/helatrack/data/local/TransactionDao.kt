@@ -28,6 +28,8 @@ interface TransactionDao {
     @Query("SELECT person as name, SUM(amount) as totalPaid FROM transactions WHERE timestamp >= :startTime GROUP BY person ORDER BY totalPaid DESC LIMIT 3")
     fun getTop3Customers(startTime: Long): Flow<List<CustomerPaymentSummary>>
 
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAllTransactions()
 
     @Query("SELECT * FROM transactions WHERE timestamp >= :startTime")
     suspend fun getTransactionsAfter(startTime: Long): List<TransactionEntity>

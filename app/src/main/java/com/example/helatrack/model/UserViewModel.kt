@@ -132,22 +132,28 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 _isLoading.value = true
 
-                // Attempt to get user with a timeout or safety check
-                val auth = supabase.auth
-                var user = auth.currentUserOrNull()
-
-                if (user == null) {
-                    // 2. Perform the sign-in (this returns Unit)
-                    auth.signInAnonymously()
-                    // 3. Refresh the user reference from the auth state
-                    user = auth.currentUserOrNull()
-                }
+                // 1. Check if Supabase has a persisted session on disk
+                val user = supabase.auth.currentUserOrNull()
 
                 if (user != null) {
+                    android.util.Log.d("HelaDebug", "Found existing session for: ${user.id}")
+
+                    // 2. Try to fetch the business profile for THIS specific user
                     val profile = supabase.from("businesses")
                         .select()
                         .decodeSingleOrNull<BusinessProfile>()
-                    _userProfile.value = profile
+
+                    if (profile != null) {
+                        _userProfile.value = profile
+                        android.util.Log.d("HelaDebug", "Profile loaded: ${profile.businessName}")
+                    } else {
+                        // Session exists but no profile record?
+                        // This happens if onboarding was interrupted.
+                        _userProfile.value = null
+                    }
+                } else {
+                    android.util.Log.d("HelaDebug", "No session found.")
+                    _userProfile.value = null
                 }
             } catch (e: Exception) {
                 android.util.Log.e("HelaTrack", "Fetch Profile Error: ${e.message}")
@@ -230,20 +236,28 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         return user?.id
     }
 
-    // Private helper: Does only Database Insertion
+
     private suspend fun createBusinessProfile(profile: BusinessProfile) {
-        supabase.from("businesses").insert(profile)
+        // upsert ensures that if the record exists, it updates; if not, it creates.
+        supabase.from("businesses").upsert(profile)
     }
 
     fun clearData() {
         viewModelScope.launch {
             try {
+                // 1. Clear Cloud Session
                 supabase.auth.signOut()
+
+                // 2. Clear Local Room Data (CRITICAL)
+                dao.deleteAllTransactions()
+
+                // 3. Reset UI State
                 _userProfile.value = null
-                // Optional: dao.clearAllTransactions()
+
+                android.util.Log.d("HelaDebug", "Local and Cloud data wiped successfully")
             } catch (e: Exception) {
+                android.util.Log.e("HelaTrack", "Logout Error: ${e.message}")
                 _userProfile.value = null
             }
         }
-    }
-}
+    }}

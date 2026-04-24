@@ -41,35 +41,33 @@ class SmsReceiver : BroadcastReceiver() {
                 Log.d("SmsReceiver", "Received from: $sender") // Helpful for Logcat
 
                 // FALLBACK: If prefs are empty, we allow MPESA for testing purposes
-                val isTracked = (savedMethod.isNotEmpty() && sender.contains(savedMethod, true)) ||
-                        (userIdentifier.isNotEmpty() && body.contains(userIdentifier)) ||
-                        sender.contains("MPESA", true) // Added fallback for testing
+                // 1. DYNAMIC TRACKING LOGIC
+                // We track if it's a known provider OR if the text contains the user's specific ID (Till/Paybill)
+                val supportedSenders = listOf("MPESA", "EQUITY", "ABSA", "AIRTEL", "303030", "AbsaAlert")
+                val isKnownSender = supportedSenders.any { sender.contains(it, ignoreCase = true) }
 
-                // 1. Filter: Does this message belong to our tracked provider?
+                val isTracked = isKnownSender || (userIdentifier.isNotEmpty() && body.contains(userIdentifier, ignoreCase = true))
+
                 if (isTracked) {
-
                     val entity = MessageParser.parse(sender, body)
 
                     if (entity != null) {
-                        // 2. Refine Category: Ensure it's tagged for the Insights Progress Bar
+                        // 2. REFINE CATEGORY
+                        // Map specific senders to the broad categories used in your UI (BANK, MPESA, etc.)
                         val refinedCategory = when {
                             sender.contains("MPESA", ignoreCase = true) -> "MPESA"
-                            sender.contains("EQUITY", ignoreCase = true) -> "BANK"
                             sender.contains("AIRTEL", ignoreCase = true) -> "AIRTEL"
-                            // If the parser already found a specific bank name, keep it
+                            sender.contains("EQUITY", ignoreCase = true) -> "BANK"
+                            sender.contains("ABSA", ignoreCase = true) || sender.contains("303030") -> "BANK"
                             entity.category != "OTHER" -> entity.category
-                            else -> "DIGITAL" // Generic digital fallback
+                            else -> "DIGITAL"
                         }
 
-                        // 3. Persist with refined category
                         val finalEntity = entity.copy(category = refinedCategory)
 
                         scope.launch {
                             dao.insertTransaction(finalEntity)
-                            showNotification(
-                                context,
-                                finalEntity
-                            )
+                            showNotification(context, finalEntity)
                         }
                     }
                 }
