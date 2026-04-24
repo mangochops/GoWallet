@@ -82,8 +82,8 @@ fun TransactionCard(transaction: TransactionEntity, ) {
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Spacer(modifier = Modifier.width(12.dp))
+            Column (modifier = Modifier.weight(1f)){
                 Text(
                     text = transaction.person, // Changed from .sender to .person
                     style = MaterialTheme.typography.titleMedium,
