@@ -27,6 +27,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.time.ZoneId
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 
 // Enum to manage our filter states
 enum class TimeFilter(val label: String) {
@@ -40,6 +41,7 @@ enum class TimeFilter(val label: String) {
 @Composable
 fun TransactionsView(viewModel: UserViewModel) {
     val context = LocalContext.current // Fix: Resolves 'context' reference error
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
 // 1. FIXED: Observe the consolidated profile instead of a non-existent businessName flow
     val profile by viewModel.userProfile.collectAsState()
@@ -152,18 +154,27 @@ fun TransactionsView(viewModel: UserViewModel) {
             }
 
             // --- TRANSACTION LIST ---
-            if (filteredTransactions.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No transactions found", style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
-                ) {
-                    items(filteredTransactions) { transaction ->
-                        TransactionCard(transaction = transaction)
+
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { viewModel.refreshData() },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (filteredTransactions.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No transactions found", style = MaterialTheme.typography.bodyMedium)
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(bottom = 80.dp) // Space for Export FAB
+                    ) {
+                        items(filteredTransactions) { transaction ->
+                            TransactionCard(transaction = transaction)
+                        }
                     }
                 }
             }
