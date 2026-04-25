@@ -44,6 +44,9 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import com.example.helatrack.features.profile.SettingsScreen
+import com.example.helatrack.features.profile.TermsScreen
+import com.example.helatrack.features.profile.PrivacyPolicyScreen
 
 
 
@@ -105,6 +108,9 @@ fun GoWalletApp(viewModel: UserViewModel) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var isEditingProfile by rememberSaveable { mutableStateOf(false) }
 
+    var showingSettings by rememberSaveable { mutableStateOf(false) }
+    var showingTerms by rememberSaveable { mutableStateOf(false) }
+    var showingPrivacy by rememberSaveable { mutableStateOf(false) }
 
     // --- SMS PERMISSION LOGIC ---
     val smsPermissionLauncher = rememberLauncherForActivityResult(
@@ -182,6 +188,9 @@ fun GoWalletApp(viewModel: UserViewModel) {
                     ProfileScreen(
                         viewModel = viewModel,
                         onEditClick = { isEditingProfile = true },
+                        onSettingsClick = { showingSettings = true },
+                        onTermsClick = { showingTerms = true },
+                        onPrivacyClick = { showingPrivacy = true },
                         onLogout = {
                             viewModel.clearData()
 
@@ -191,6 +200,15 @@ fun GoWalletApp(viewModel: UserViewModel) {
             }
             }
         }
+    }
+    if (showingSettings) {
+        SettingsScreen(onBack = { showingSettings = false })
+    }
+    if (showingTerms) {
+        TermsScreen(onBack = { showingTerms = false })
+    }
+    if (showingPrivacy) {
+        PrivacyPolicyScreen(onBack = { showingPrivacy = false })
     }
 }
 
