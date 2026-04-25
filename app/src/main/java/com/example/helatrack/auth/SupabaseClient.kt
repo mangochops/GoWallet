@@ -5,13 +5,15 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.ktor.client.engine.android.Android
+import com.example.helatrack.BuildConfig
 
 @OptIn(io.github.jan.supabase.annotations.SupabaseInternal::class)
 object SupabaseConfig {
+
     val client by lazy {
         createSupabaseClient(
-            supabaseUrl = "https://tqxltdldqyrfkgjllzyx.supabase.co",
-            supabaseKey = "sb_publishable_D26ZoSZ-x31U6vTRE2hIIw_0xaSyixP"
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
         ) {
             httpEngine = Android.create()
 

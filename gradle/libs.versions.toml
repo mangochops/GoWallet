@@ -15,6 +15,8 @@ ksp = "2.2.10-2.0.2"
 foundation = "1.10.6"
 supabase = "3.4.1"
 ktor = "3.0.0"
+material3 = "1.4.0"
+ui = "1.11.0"
 
 
 [libraries]
@@ -47,6 +49,8 @@ ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-plugins = { group = "io.ktor", name = "ktor-client-plugins", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

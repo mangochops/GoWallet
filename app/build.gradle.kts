@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,11 +9,29 @@ plugins {
 
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
 android {
     namespace = "com.example.helatrack"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true // Ensure this is enabled
+    }
+
     defaultConfig {
+
+        val url = localProperties.getProperty("SUPABASE_URL") ?: ""
+        val key = localProperties.getProperty("SUPABASE_KEY") ?: ""
+
+        // Notice the extra quotes inside the string: "\"$url\""
+        buildConfigField("String", "SUPABASE_URL", "\"$url\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"$key\"")
+
         applicationId = "com.example.helatrack"
         minSdk = 24
         targetSdk = 36
@@ -20,6 +39,7 @@ android {
         versionName = "1.0"
         multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     // Modern way to configure KSP for Room in AGP 9.1+
@@ -76,6 +96,8 @@ project.tasks.configureEach {
 
 dependencies {
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation(platform(libs.supabase.bom))
