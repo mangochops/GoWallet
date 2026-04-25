@@ -25,7 +25,10 @@ import com.example.helatrack.ui.theme.HelaTrackTheme
 fun ProfileScreen(
     viewModel: UserViewModel,
     onEditClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit
 ) {
     // 1. Observe the consolidated userProfile state
     val profile by viewModel.userProfile.collectAsState()
@@ -40,7 +43,10 @@ fun ProfileScreen(
         identifier = profile?.identifierHash ?: "N/A",
         selectedProvider = selectedProvider,
         onEditClick = onEditClick,
-        onLogout = onLogout
+        onLogout = onLogout,
+        onSettingsClick = onSettingsClick,
+        onTermsClick = onTermsClick,
+        onPrivacyClick = onPrivacyClick
     )
 }
 
@@ -50,7 +56,10 @@ fun ProfileView(
     identifier: String,
     selectedProvider: PaymentProvider?,
     onEditClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -92,11 +101,22 @@ fun ProfileView(
 
         Spacer(Modifier.height(32.dp))
         SectionHeader("Support & Legal")
-        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
-        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
-        ProfilePages(Icons.Default.Store, "Business Name", businessName, isClickable = true, onClick = onEditClick)
+        ProfilePages(
+            icon = Icons.Default.Settings,
+            label = "App Settings",
+            onClick = onSettingsClick // Pass this in as a parameter
+        )
+        ProfilePages(
+            icon = Icons.Default.Description,
+            label = "Terms & Conditions",
+            onClick = onTermsClick
+        )
+        ProfilePages(
+            icon = Icons.Default.PrivacyTip,
+            label = "Privacy Policy",
+            onClick = onPrivacyClick,
 
-
+        )
         // Add this if you want a dedicated button instead of just tap-to-edit rows
         Button(
             onClick = onEditClick,
@@ -153,7 +173,12 @@ fun ProfileItem(icon: ImageVector, label: String, value: String, isClickable: Bo
 }
 
 @Composable
-fun ProfilePages(icon: ImageVector, label: String, value: String, isClickable: Boolean = false, onClick: () -> Unit = {}) {
+fun ProfilePages(
+    icon: ImageVector,
+     label: String,
+     isClickable: Boolean = true, // Added default value
+     onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,11 +188,18 @@ fun ProfilePages(icon: ImageVector, label: String, value: String, isClickable: B
     ) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.width(16.dp))
-        Column {
-
-            Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-        }
-        Spacer(Modifier.width(16.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f) // Pushes the chevron to the end
+        )
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.size(20.dp)
+        )
 
     }
 }
@@ -182,7 +214,10 @@ fun ProfilePreview() {
             identifier = "0712345678",
             selectedProvider = mpesaProvider,
             onEditClick = {},
-            onLogout = {}
+            onLogout = {},
+            onSettingsClick = {},
+            onTermsClick = {},
+            onPrivacyClick = {}
         )
     }
 }
