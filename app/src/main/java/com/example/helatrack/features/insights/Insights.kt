@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material.icons.filled.PictureAsPdf
 
 @Composable
 fun ExpandableMonthlyInsightCard(
@@ -28,7 +29,8 @@ fun ExpandableMonthlyInsightCard(
     isIncrease: Boolean,
     digitalAmount: Double,
     cashAmount: Double,
-    topCustomers: List<CustomerPaymentSummary> // Top 3 list derived from TransactionEntity
+    topCustomers: List<CustomerPaymentSummary>, // Top 3 list derived from TransactionEntity
+    onDownloadReport: () -> Unit
 ) {
     // State to manage whether the card is expanded
     var isExpanded by remember { mutableStateOf(false) }
@@ -139,6 +141,35 @@ fun ExpandableMonthlyInsightCard(
                     CustomerItem(customer, index + 1)
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Download and Close Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onDownloadReport,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Download Report")
+                    }
+
+                    FilledTonalButton(
+                        onClick = { /* This just triggers the card click to collapse */ },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Close")
+                    }
+                }
+
                 // Simple nudge to tell user to click again to close
                 Text(
                     text = "Tap again to collapse",
@@ -240,7 +271,8 @@ fun ExpandableCardPreview() {
                 isIncrease = true, // Trend comparing April to March
                 digitalAmount = 120000.0, // (MPESA + BANK)
                 cashAmount = 30000.0, // (CASH)
-                topCustomers = sampleCustomers
+                topCustomers = sampleCustomers,
+                onDownloadReport = {}
             )
         }
     }

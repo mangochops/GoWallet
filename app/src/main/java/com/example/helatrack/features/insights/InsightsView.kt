@@ -13,10 +13,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.helatrack.model.UserViewModel
 import com.example.helatrack.ui.theme.HelaTrackTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsView(viewModel: UserViewModel) {
+    val context = LocalContext.current
+    // 1. Create a coroutine scope
+    val scope = rememberCoroutineScope()
+    val currentMonthYear by remember {
+        derivedStateOf {
+            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            LocalDate.now().format(formatter)
+        }
+    }
     // Collecting real-time data flows from your ViewModel
     val digitalTotal by viewModel.monthlyDigitalTotal.collectAsState(initial = 0.0)
     val cashTotal by viewModel.monthlyCashTotal.collectAsState(initial = 0.0)
@@ -68,12 +82,18 @@ fun InsightsView(viewModel: UserViewModel) {
                 item {
                     // This card reflects REAL database values
                     ExpandableMonthlyInsightCard(
-                        monthName = "April Performance",
+                        monthName = "$currentMonthYear Performance",
                         totalAmount = (digitalTotal ?: 0.0) + (cashTotal ?: 0.0),
                         isIncrease = true,
                         digitalAmount = digitalTotal ?: 0.0,
                         cashAmount = cashTotal ?: 0.0,
-                        topCustomers = topCustomers
+                        topCustomers = topCustomers,
+                        onDownloadReport = {
+                            // 3. Pass the dynamic string to the report generator
+                            scope.launch {
+                                viewModel.generateMonthlyReport(context, currentMonthYear)
+                            }
+                        }
                     )
                 }
 
@@ -131,7 +151,8 @@ fun InsightsViewContentMock() {
                 topCustomers = listOf(
                     CustomerPaymentSummary("Willy's Store", 85000.0),
                     CustomerPaymentSummary("Nairobi Groceries", 45000.0)
-                )
+                ),
+                onDownloadReport = {}
             )
         }
     }
