@@ -38,6 +38,7 @@ import androidx.work.Constraints
 import java.util.concurrent.TimeUnit
 import java.util.Calendar
 import android.content.Context
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import com.example.helatrack.worker.EodSummaryWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -150,7 +151,23 @@ fun GoWalletApp(viewModel: UserViewModel) {
             }
         )
     } else {
+        // Define custom colors for better dark mode visibility
+        val mySuiteItemColors = NavigationSuiteDefaults.itemColors(
+            navigationBarItemColors = NavigationBarItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                // 0.8f alpha for better unselected visibility in dark mode
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+
         NavigationSuiteScaffold(
+            navigationSuiteColors = NavigationSuiteDefaults.colors(
+                navigationBarContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                navigationBarContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
             navigationSuiteItems = {
                 AppDestinations.entries.forEach { destination ->
                     item(
@@ -167,7 +184,8 @@ fun GoWalletApp(viewModel: UserViewModel) {
                             if (destination != AppDestinations.PROFILE) {
                                 isEditingProfile = false
                             }
-                        }
+                        },
+                        colors = mySuiteItemColors
                     )
                 }
             }

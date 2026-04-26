@@ -52,7 +52,7 @@ fun TransactionsView(viewModel: UserViewModel) {
     var selectedFilter by rememberSaveable { mutableStateOf(TimeFilter.ALL) }
 
     // Logic to filter transactions based on both Search and Time Tags
-    val filteredTransactions = remember(realTransactions,searchQuery, selectedFilter) {
+    val groupedTransactions = remember(realTransactions,searchQuery, selectedFilter) {
         val now = LocalDate.now()
 
         realTransactions.filter { entity ->
@@ -73,6 +73,13 @@ fun TransactionsView(viewModel: UserViewModel) {
 
             matchesSearch && matchesFilter
         }
+            .groupBy { entity ->
+                // Group by LocalDate to get the "Start of Day" equivalent
+                Instant.ofEpochMilli(entity.timestamp)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+            }
+            .toSortedMap(compareByDescending { it })
     }
 
     Scaffold(
@@ -94,24 +101,24 @@ fun TransactionsView(viewModel: UserViewModel) {
                 )
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { if (filteredTransactions.isNotEmpty()) {
-                    exportTransactionsToPdf(
-                        context = context,
-                        transactions = filteredTransactions,
-                        businessName = businessName.ifEmpty { "My SME" }
-                    )
-                } else {
-                    Toast.makeText(context, "No transactions to export", Toast.LENGTH_SHORT).show()
-                } },
-                icon = { Icon(Icons.Default.PictureAsPdf, contentDescription = null) },
-                text = { Text("Export PDF") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp)
-            )
-        }
+//        floatingActionButton = {
+//            ExtendedFloatingActionButton(
+//                onClick = { if (groupedTransactions.isNotEmpty()) {
+//                    exportTransactionsToPdf(
+//                        context = context,
+//                        transactions = groupedTransactions,
+//                        businessName = businessName.ifEmpty { "My SME" }
+//                    )
+//                } else {
+//                    Toast.makeText(context, "No transactions to export", Toast.LENGTH_SHORT).show()
+//                } },
+//                icon = { Icon(Icons.Default.PictureAsPdf, contentDescription = null) },
+//                text = { Text("Export PDF") },
+//                containerColor = MaterialTheme.colorScheme.primary,
+//                contentColor = MaterialTheme.colorScheme.onPrimary,
+//                shape = RoundedCornerShape(16.dp)
+//            )
+//        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -160,7 +167,7 @@ fun TransactionsView(viewModel: UserViewModel) {
                 onRefresh = { viewModel.refreshData() },
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (filteredTransactions.isEmpty()) {
+                if (groupedTransactions.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No transactions found", style = MaterialTheme.typography.bodyMedium)
                     }
@@ -172,11 +179,55 @@ fun TransactionsView(viewModel: UserViewModel) {
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(bottom = 80.dp) // Space for Export FAB
                     ) {
-                        items(filteredTransactions) { transaction ->
-                            TransactionCard(transaction = transaction)
+                        groupedTransactions.forEach { (date, transactions) ->
+                            // Equivalent to SwiftUI Section(header: DailyTotalHeader)
+                            stickyHeader {
+                                DailyTotalHeader(date = date, transactions = transactions)
+                            }
+
+                            items(transactions) { transaction ->
+                                TransactionCard(transaction = transaction)
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun DailyTotalHeader(date: LocalDate, transactions: List<com.example.helatrack.data.local.TransactionEntity>) {
+    val totalAmount = transactions.sumOf { it.amount.toDouble() }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f) // Pinned header background
+    ) {
+        Row(
+            modifier = Modifier.padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = date.toString(), // You can use a Formatter for "Apr 16, 2026"
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+            )
+
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "Daily Total: KES ${totalAmount.toInt()}",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
